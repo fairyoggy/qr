@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Reader Paste</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1016;
+      --surface: #141923;
+      --surface-2: #1b2230;
+      --surface-3: #222b3c;
+      --border: #2d374a;
+      --text: #edf2ff;
+      --muted: #9fb0c9;
+      --accent: #49d7c4;
+      --accent-2: #4b7cff;
+      --ok: #8af0b1;
+      --danger: #ff8585;
+      --radius: 20px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(75,124,255,.18), transparent 32%),
+        radial-gradient(circle at right top, rgba(73,215,196,.12), transparent 26%),
+        var(--bg);
+      padding: 24px;
+    }
+    .app {
+      width: min(100%, 920px);
+      margin: 0 auto;
+      background: rgba(20, 25, 35, 0.94);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, .35);
+      backdrop-filter: blur(10px);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      padding: 22px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+    .logo-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid;
+      place-items: center;
+      color: #09111d;
+      font-weight: 900;
+    }
+    .status {
+      color: var(--muted);
+      font-size: 14px;
+      text-align: right;
+    }
+    .content {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 20px;
+      padding: 24px;
+    }
+    .panel {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.05;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .label {
+      margin-bottom: 10px;
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .dropzone {
+      position: relative;
+      min-height: 290px;
+      border: 1.5px dashed #41516c;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 18px;
+      outline: none;
+    }
+    .dropzone.active {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(73,215,196,.25);
+      background: rgba(73,215,196,.06);
+    }
+    .dropzone-inner {
+      max-width: 420px;
+    }
+    .dropzone kbd {
+      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-3);
+      font-family: inherit;
+      font-size: 13px;
+    }
+    .dropzone p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    button, .file-label {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s ease, opacity .15s ease, background .15s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    button:hover, .file-label:hover { transform: translateY(-1px); }
+    .primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #08121d; }
+    .secondary { background: var(--surface-3); color: var(--text); border: 1px solid var(--border); }
+    .preview-wrap {
+      display: grid;
+      gap: 14px;
+    }
+    .preview-box {
+      min-height: 290px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #0a0d12;
+      display: grid;
+      place-items: center;
+    }
+    .preview-box img {
+      max-width: 100%;
+      max-height: 420px;
+      object-fit: contain;
+      display: none;
+    }
+    .placeholder {
+      color: var(--muted);
+      text-align: center;
+      padding: 24px;
+      line-height: 1.6;
+    }
+    .result {
+      min-height: 160px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.65;
+      font-size: 16px;
+    }
+    .ok { color: var(--ok); }
+    .err { color: var(--danger); }
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    input[type="file"] { display: none; }
+    @media (max-width: 860px) {
+      .content { grid-template-columns: 1fr; }
+      .header { align-items: flex-start; flex-direction: column; }
+      .status { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div class="logo" aria-label="QR Reader logo">
+        <div class="logo-mark">QR</div>
+        <div>
+          <div>QR Reader</div>
+          <div style="font-size:13px;color:var(--muted);font-weight:600;">Вставка скриншотов из буфера</div>
+        </div>
+      </div>
+      <div class="status" id="status">Жду скриншот из буфера или загрузку файла</div>
+    </header>
+
+    <section class="content">
+      <div style="display:grid; gap:20px;">
+        <section class="panel hero">
+          <h1>Чтение QR из скриншота</h1>
+          <p>Нажми в область ниже и вставь скриншот через <strong>Ctrl + V</strong>. Можно также перетащить PNG/JPG или выбрать файл вручную.</p>
+        </section>
+
+        <section class="panel">
+          <div class="label">Источник изображения</div>
+          <div class="dropzone" id="dropzone" tabindex="0">
+            <div class="dropzone-inner">
+              <div style="font-size:20px;font-weight:800;">Вставь сюда скриншот</div>
+              <p><kbd>Ctrl</kbd> + <kbd>V</kbd> после копирования изображения в буфер.</p>
+              <p>Также поддерживаются drag and drop и обычный выбор файла.</p>
+            </div>
+          </div>
+          <div class="actions">
+            <label class="file-label secondary" for="fileInput">Выбрать изображение</label>
+            <button class="primary" id="decodeBtn">Распознать QR</button>
+            <button class="secondary" id="clearBtn">Очистить</button>
+            <button class="secondary" id="copyBtn">Копировать текст</button>
+            <input type="file" id="fileInput" accept="image/*" />
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="label">Текст из QR</div>
+          <div class="result" id="result">Пока ничего не считано.</div>
+        </section>
+      </div>
+
+      <div style="display:grid; gap:20px;">
+        <section class="panel preview-wrap">
+          <div class="label">Предпросмотр</div>
+          <div class="preview-box">
+            <img id="preview" alt="Предпросмотр вставленного изображения" />
+            <div class="placeholder" id="placeholder">Здесь появится вставленный или загруженный скриншот.</div>
+          </div>
+          <div class="meta" id="meta">Нет загруженного изображения.</div>
+        </section>
+
+        <section class="panel">
+          <div class="label">Как пользоваться</div>
+          <div class="meta">
+            1. Сделай скриншот с QR-кодом.<br>
+            2. Скопируй его в буфер.<br>
+            3. Кликни по области вставки и нажми Ctrl + V.<br>
+            4. Нажми «Распознать QR», если чтение не началось автоматически.
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const resultEl = document.getElementById('result');
+    const previewEl = document.getElementById('preview');
+    const placeholderEl = document.getElementById('placeholder');
+    const metaEl = document.getElementById('meta');
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const decodeBtn = document.getElementById('decodeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyBtn = document.getElementById('copyBtn');
+
+    let currentFile = null;
+    let lastText = '';
+
+    function setStatus(text, type = '') {
+      statusEl.textContent = text;
+      statusEl.className = `status ${type}`.trim();
+    }
+
+    function showImage(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        setStatus('Нужен именно файл изображения', 'err');
+        return;
+      }
+      currentFile = file;
+      const url = URL.createObjectURL(file);
+      previewEl.src = url;
+      previewEl.style.display = 'block';
+      placeholderEl.style.display = 'none';
+      metaEl.textContent = `${file.name || 'clipboard-image'} • ${Math.round(file.size / 1024)} KB • ${file.type}`;
+      setStatus('Изображение готово к распознаванию');
+      decodeCurrentImage();
+    }
+
+    async function decodeCurrentImage() {
+      if (!currentFile) {
+        setStatus('Сначала вставь или загрузи скриншот', 'err');
+        return;
+      }
+      try {
+        setStatus('Распознаю QR-код...');
+        const html5QrCode = new Html5Qrcode('reader-temporary');
+        const decodedText = await html5QrCode.scanFile(currentFile, true);
+        lastText = decodedText;
+        resultEl.textContent = decodedText;
+        setStatus('QR-код успешно считан', 'ok');
+      } catch (error) {
+        resultEl.textContent = 'QR-код не найден или изображение слишком плохого качества.';
+        setStatus('Не удалось распознать QR-код', 'err');
+      }
+    }
+
+    function clearAll() {
+      currentFile = null;
+      lastText = '';
+      previewEl.removeAttribute('src');
+      previewEl.style.display = 'none';
+      placeholderEl.style.display = 'block';
+      metaEl.textContent = 'Нет загруженного изображения.';
+      resultEl.textContent = 'Пока ничего не считано.';
+      fileInput.value = '';
+      setStatus('Очищено. Жду новый скриншот');
+    }
+
+    async function copyText() {
+      if (!lastText) {
+        setStatus('Сначала нужно распознать QR-код', 'err');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(lastText);
+        setStatus('Текст скопирован в буфер обмена', 'ok');
+      } catch {
+        setStatus('Не удалось скопировать текст', 'err');
+      }
+    }
+
+    function handlePaste(event) {
+      const items = event.clipboardData?.items || [];
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          event.preventDefault();
+          const file = item.getAsFile();
+          showImage(file);
+          return;
+        }
+      }
+      setStatus('В буфере не найдено изображение', 'err');
+    }
+
+    dropzone.addEventListener('paste', handlePaste);
+    window.addEventListener('paste', handlePaste);
+
+    fileInput.addEventListener('change', (event) => {
+      const file = event.target.files?.[0];
+      if (file) showImage(file);
+    });
+
+    dropzone.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      dropzone.classList.add('active');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('active');
+    });
+
+    dropzone.addEventListener('drop', (event) => {
+      event.preventDefault();
+      dropzone.classList.remove('active');
+      const file = event.dataTransfer?.files?.[0];
+      if (file) showImage(file);
+    });
+
+    decodeBtn.addEventListener('click', decodeCurrentImage);
+    clearBtn.addEventListener('click', clearAll);
+    copyBtn.addEventListener('click', copyText);
+
+    dropzone.addEventListener('click', () => dropzone.focus());
+  </script>
+
+  <div id="reader-temporary" style="display:none"></div>
+</body>
+</html>
