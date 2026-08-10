@@ -1,399 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QR Reader Paste</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Reader + 2FA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
-    :root {
-      --bg: #0d1016;
-      --surface: #141923;
-      --surface-2: #1b2230;
-      --surface-3: #222b3c;
-      --border: #2d374a;
-      --text: #edf2ff;
-      --muted: #9fb0c9;
-      --accent: #49d7c4;
-      --accent-2: #4b7cff;
-      --ok: #8af0b1;
-      --danger: #ff8585;
-      --radius: 20px;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: 'Inter', system-ui, sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top, rgba(75,124,255,.18), transparent 32%),
-        radial-gradient(circle at right top, rgba(73,215,196,.12), transparent 26%),
-        var(--bg);
-      padding: 24px;
-    }
-    .app {
-      width: min(100%, 920px);
-      margin: 0 auto;
-      background: rgba(20, 25, 35, 0.94);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      overflow: hidden;
-      box-shadow: 0 25px 80px rgba(0, 0, 0, .35);
-      backdrop-filter: blur(10px);
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      align-items: center;
-      padding: 22px 24px;
-      border-bottom: 1px solid var(--border);
-    }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      font-weight: 800;
-      letter-spacing: .02em;
-    }
-    .logo-mark {
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      display: grid;
-      place-items: center;
-      color: #09111d;
-      font-weight: 900;
-    }
-    .status {
-      color: var(--muted);
-      font-size: 14px;
-      text-align: right;
-    }
-    .content {
-      display: grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap: 20px;
-      padding: 24px;
-    }
-    .panel {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px;
-    }
-    .hero h1 {
-      margin: 0 0 10px;
-      font-size: clamp(28px, 4vw, 42px);
-      line-height: 1.05;
-    }
-    .hero p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.65;
-    }
-    .label {
-      margin-bottom: 10px;
-      font-size: 12px;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    .dropzone {
-      position: relative;
-      min-height: 290px;
-      border: 1.5px dashed #41516c;
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-      display: grid;
-      place-items: center;
-      text-align: center;
-      padding: 18px;
-      outline: none;
-    }
-    .dropzone.active {
-      border-color: var(--accent);
-      box-shadow: inset 0 0 0 1px rgba(73,215,196,.25);
-      background: rgba(73,215,196,.06);
-    }
-    .dropzone-inner {
-      max-width: 420px;
-    }
-    .dropzone kbd {
-      padding: 4px 8px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface-3);
-      font-family: inherit;
-      font-size: 13px;
-    }
-    .dropzone p {
-      margin: 10px 0 0;
-      color: var(--muted);
-      line-height: 1.55;
-    }
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 16px;
-    }
-    button, .file-label {
-      border: 0;
-      border-radius: 14px;
-      padding: 12px 16px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform .15s ease, opacity .15s ease, background .15s ease;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-    button:hover, .file-label:hover { transform: translateY(-1px); }
-    .primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #08121d; }
-    .secondary { background: var(--surface-3); color: var(--text); border: 1px solid var(--border); }
-    .preview-wrap {
-      display: grid;
-      gap: 14px;
-    }
-    .preview-box {
-      min-height: 290px;
-      border-radius: 18px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      background: #0a0d12;
-      display: grid;
-      place-items: center;
-    }
-    .preview-box img {
-      max-width: 100%;
-      max-height: 420px;
-      object-fit: contain;
-      display: none;
-    }
-    .placeholder {
-      color: var(--muted);
-      text-align: center;
-      padding: 24px;
-      line-height: 1.6;
-    }
-    .result {
-      min-height: 160px;
-      white-space: pre-wrap;
-      word-break: break-word;
-      line-height: 1.65;
-      font-size: 16px;
-    }
-    .ok { color: var(--ok); }
-    .err { color: var(--danger); }
-    .meta {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.55;
-    }
-    input[type="file"] { display: none; }
-    @media (max-width: 860px) {
-      .content { grid-template-columns: 1fr; }
-      .header { align-items: flex-start; flex-direction: column; }
-      .status { text-align: left; }
-    }
+    :root { --bg:#0d1016; --surface:#141923; --surface2:#1b2230; --surface3:#222b3c; --border:#2d374a; --text:#edf2ff; --muted:#9fb0c9; --accent:#49d7c4; --accent2:#4b7cff; --ok:#8af0b1; --danger:#ff8585; --radius:20px; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; padding:24px; font-family:Inter,system-ui,sans-serif; color:var(--text); background:radial-gradient(circle at top,rgba(75,124,255,.18),transparent 32%),radial-gradient(circle at right top,rgba(73,215,196,.12),transparent 26%),var(--bg); }
+    .app { width:min(100%,920px); margin:0 auto; overflow:hidden; border:1px solid var(--border); border-radius:28px; background:rgba(20,25,35,.94); box-shadow:0 25px 80px rgba(0,0,0,.35); }
+    .header { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:22px 24px; border-bottom:1px solid var(--border); }
+    .logo { display:flex; align-items:center; gap:14px; font-weight:800; letter-spacing:.02em; }
+    .logo-mark { display:grid; place-items:center; width:44px; height:44px; border-radius:14px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#09111d; font-weight:900; }
+    .subtitle,.status,.meta { color:var(--muted); font-size:14px; line-height:1.55; } .status { text-align:right; } .ok { color:var(--ok); } .err { color:var(--danger); }
+    .content { display:grid; grid-template-columns:1.1fr .9fr; gap:20px; padding:24px; } .stack { display:grid; align-content:start; gap:20px; }
+    .panel { padding:18px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface2); } .hero h1 { margin:0 0 10px; font-size:clamp(28px,4vw,42px); line-height:1.05; } .hero p { margin:0; color:var(--muted); line-height:1.65; }
+    .label { margin-bottom:10px; color:var(--muted); font-size:12px; letter-spacing:.14em; text-transform:uppercase; }
+    .dropzone { display:grid; place-items:center; min-height:290px; padding:18px; border:1.5px dashed #41516c; border-radius:18px; outline:none; text-align:center; background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01)); } .dropzone.active { border-color:var(--accent); background:rgba(73,215,196,.06); box-shadow:inset 0 0 0 1px rgba(73,215,196,.25); }
+    .dropzone p { margin:10px 0 0; color:var(--muted); line-height:1.55; } kbd { padding:4px 8px; border:1px solid var(--border); border-radius:8px; background:var(--surface3); font:inherit; font-size:13px; }
+    .actions,.row { display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; } button,.file-label { display:inline-flex; align-items:center; justify-content:center; padding:12px 16px; border:0; border-radius:14px; font-weight:700; cursor:pointer; text-decoration:none; transition:transform .15s ease,background .15s ease; } button:hover,.file-label:hover { transform:translateY(-1px); } .primary { color:#08121d; background:linear-gradient(135deg,var(--accent),var(--accent2)); } .secondary { color:var(--text); border:1px solid var(--border); background:var(--surface3); } input[type=file] { display:none; }
+    .preview-box { display:grid; place-items:center; min-height:290px; overflow:hidden; border:1px solid var(--border); border-radius:18px; background:#0a0d12; } .preview-box img { display:none; max-width:100%; max-height:420px; object-fit:contain; } .placeholder { padding:24px; color:var(--muted); text-align:center; line-height:1.6; }
+    .result { min-height:110px; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.65; } input { width:100%; padding:14px 16px; border:1px solid var(--border); border-radius:12px; outline:none; color:var(--text); background:#10131a; font:inherit; } input:focus { border-color:var(--accent); }
+    .code { margin-top:18px; padding:16px; border:1px solid var(--border); border-radius:14px; background:#10131a; } .digits { font-size:44px; font-weight:800; letter-spacing:2px; font-variant-numeric:tabular-nums; } .error { min-height:20px; margin-top:12px; color:var(--danger); font-size:14px; }
+    @media (max-width:860px) { body { padding:14px; } .content { grid-template-columns:1fr; } .header { align-items:flex-start; flex-direction:column; } .status { text-align:left; } } @media (max-width:430px) { .actions > *, .row > * { width:100%; } .digits { font-size:38px; } }
   </style>
 </head>
 <body>
   <main class="app">
-    <header class="header">
-      <div class="logo" aria-label="QR Reader logo">
-        <div class="logo-mark">QR</div>
-        <div>
-          <div>QR Reader</div>
-          <div style="font-size:13px;color:var(--muted);font-weight:600;">Вставка скриншотов из буфера</div>
-        </div>
-      </div>
-      <div class="status" id="status">Жду скриншот из буфера или загрузку файла</div>
-    </header>
-
+    <header class="header"><div class="logo"><div class="logo-mark">QR</div><div><div>QR Reader</div><div class="subtitle">Сканирование QR и локальный 2FA-код</div></div></div><div class="status" id="status">Вставьте скриншот из буфера или загрузите файл</div></header>
     <section class="content">
-      <div style="display:grid; gap:20px;">
-        <section class="panel hero">
-          <h1>Чтение QR из скриншота</h1>
-          <p>Нажми в область ниже и вставь скриншот через <strong>Ctrl + V</strong>. Можно также перетащить PNG/JPG или выбрать файл вручную.</p>
-        </section>
-
-        <section class="panel">
-          <div class="label">Источник изображения</div>
-          <div class="dropzone" id="dropzone" tabindex="0">
-            <div class="dropzone-inner">
-              <div style="font-size:20px;font-weight:800;">Вставь сюда скриншот</div>
-              <p><kbd>Ctrl</kbd> + <kbd>V</kbd> после копирования изображения в буфер.</p>
-              <p>Также поддерживаются drag and drop и обычный выбор файла.</p>
-            </div>
-          </div>
-          <div class="actions">
-            <label class="file-label secondary" for="fileInput">Выбрать изображение</label>
-            <button class="primary" id="decodeBtn">Распознать QR</button>
-            <button class="secondary" id="clearBtn">Очистить</button>
-            <button class="secondary" id="copyBtn">Копировать текст</button>
-            <input type="file" id="fileInput" accept="image/*" />
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="label">Текст из QR</div>
-          <div class="result" id="result">Пока ничего не считано.</div>
-        </section>
+      <div class="stack">
+        <section class="panel hero"><h1>Чтение QR из скриншота</h1><p>Кликните по области ниже и вставьте изображение через <strong>Ctrl + V</strong>. Поддерживаются также PNG/JPG и перетаскивание файла.</p></section>
+        <section class="panel"><div class="label">Источник изображения</div><div class="dropzone" id="dropzone" tabindex="0"><div><div style="font-size:20px;font-weight:800">Вставьте сюда скриншот</div><p><kbd>Ctrl</kbd> + <kbd>V</kbd> после копирования изображения.</p><p>Также доступен drag-and-drop и выбор файла.</p></div></div><div class="actions"><label class="file-label secondary" for="fileInput">Выбрать изображение</label><button class="primary" id="decodeBtn">Распознать QR</button><button class="secondary" id="clearBtn">Очистить</button><button class="secondary" id="copyBtn">Копировать текст</button><input type="file" id="fileInput" accept="image/*"></div></section>
+        <section class="panel"><div class="label">Текст из QR</div><div class="result" id="result">Пока ничего не считано.</div></section>
       </div>
-
-      <div style="display:grid; gap:20px;">
-        <section class="panel preview-wrap">
-          <div class="label">Предпросмотр</div>
-          <div class="preview-box">
-            <img id="preview" alt="Предпросмотр вставленного изображения" />
-            <div class="placeholder" id="placeholder">Здесь появится вставленный или загруженный скриншот.</div>
-          </div>
-          <div class="meta" id="meta">Нет загруженного изображения.</div>
-        </section>
-
-        <section class="panel">
-          <div class="label">Как пользоваться</div>
-          <div class="meta">
-            1. Сделай скриншот с QR-кодом.<br>
-            2. Скопируй его в буфер.<br>
-            3. Кликни по области вставки и нажми Ctrl + V.<br>
-            4. Нажми «Распознать QR», если чтение не началось автоматически.
-          </div>
-        </section>
+      <div class="stack">
+        <section class="panel"><div class="label">Предпросмотр</div><div class="preview-box"><img id="preview" alt="Предпросмотр вставленного изображения"><div class="placeholder" id="placeholder">Здесь появится вставленный или загруженный скриншот.</div></div><div class="meta" id="meta" style="margin-top:14px">Нет загруженного изображения.</div></section>
+        <section class="panel" id="twoFactor"><div class="label">Локальный 2FA генератор</div><p class="meta" style="margin:0 0 14px">Secret из QR автоматически подставляется и копируется в буфер. Расчёт выполняется только в браузере.</p><label class="meta" for="secret">Secret key</label><input id="secret" type="text" placeholder="Например: JBSWY3DPEHPK3PXP" autocomplete="off" spellcheck="false"><div class="row"><button class="primary" id="generate">Получить код</button><button class="secondary" id="copyCode" type="button">Скопировать код</button></div><div class="error" id="error"></div><section class="code"><div class="digits" id="code">000000</div><div class="meta" id="timer">Осталось: 30 сек</div></section></section>
       </div>
     </section>
   </main>
-
-  <script>
-    const statusEl = document.getElementById('status');
-    const resultEl = document.getElementById('result');
-    const previewEl = document.getElementById('preview');
-    const placeholderEl = document.getElementById('placeholder');
-    const metaEl = document.getElementById('meta');
-    const fileInput = document.getElementById('fileInput');
-    const dropzone = document.getElementById('dropzone');
-    const decodeBtn = document.getElementById('decodeBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const copyBtn = document.getElementById('copyBtn');
-
-    let currentFile = null;
-    let lastText = '';
-
-    function setStatus(text, type = '') {
-      statusEl.textContent = text;
-      statusEl.className = `status ${type}`.trim();
-    }
-
-    function showImage(file) {
-      if (!file || !file.type.startsWith('image/')) {
-        setStatus('Нужен именно файл изображения', 'err');
-        return;
-      }
-      currentFile = file;
-      const url = URL.createObjectURL(file);
-      previewEl.src = url;
-      previewEl.style.display = 'block';
-      placeholderEl.style.display = 'none';
-      metaEl.textContent = `${file.name || 'clipboard-image'} • ${Math.round(file.size / 1024)} KB • ${file.type}`;
-      setStatus('Изображение готово к распознаванию');
-      decodeCurrentImage();
-    }
-
-    async function decodeCurrentImage() {
-      if (!currentFile) {
-        setStatus('Сначала вставь или загрузи скриншот', 'err');
-        return;
-      }
-      try {
-        setStatus('Распознаю QR-код...');
-        const html5QrCode = new Html5Qrcode('reader-temporary');
-        const decodedText = await html5QrCode.scanFile(currentFile, true);
-        lastText = decodedText;
-        resultEl.textContent = decodedText;
-        setStatus('QR-код успешно считан', 'ok');
-      } catch (error) {
-        resultEl.textContent = 'QR-код не найден или изображение слишком плохого качества.';
-        setStatus('Не удалось распознать QR-код', 'err');
-      }
-    }
-
-    function clearAll() {
-      currentFile = null;
-      lastText = '';
-      previewEl.removeAttribute('src');
-      previewEl.style.display = 'none';
-      placeholderEl.style.display = 'block';
-      metaEl.textContent = 'Нет загруженного изображения.';
-      resultEl.textContent = 'Пока ничего не считано.';
-      fileInput.value = '';
-      setStatus('Очищено. Жду новый скриншот');
-    }
-
-    async function copyText() {
-      if (!lastText) {
-        setStatus('Сначала нужно распознать QR-код', 'err');
-        return;
-      }
-      try {
-        await navigator.clipboard.writeText(lastText);
-        setStatus('Текст скопирован в буфер обмена', 'ok');
-      } catch {
-        setStatus('Не удалось скопировать текст', 'err');
-      }
-    }
-
-    function handlePaste(event) {
-      const items = event.clipboardData?.items || [];
-      for (const item of items) {
-        if (item.type.startsWith('image/')) {
-          event.preventDefault();
-          const file = item.getAsFile();
-          showImage(file);
-          return;
-        }
-      }
-      setStatus('В буфере не найдено изображение', 'err');
-    }
-
-    dropzone.addEventListener('paste', handlePaste);
-    window.addEventListener('paste', handlePaste);
-
-    fileInput.addEventListener('change', (event) => {
-      const file = event.target.files?.[0];
-      if (file) showImage(file);
-    });
-
-    dropzone.addEventListener('dragover', (event) => {
-      event.preventDefault();
-      dropzone.classList.add('active');
-    });
-
-    dropzone.addEventListener('dragleave', () => {
-      dropzone.classList.remove('active');
-    });
-
-    dropzone.addEventListener('drop', (event) => {
-      event.preventDefault();
-      dropzone.classList.remove('active');
-      const file = event.dataTransfer?.files?.[0];
-      if (file) showImage(file);
-    });
-
-    decodeBtn.addEventListener('click', decodeCurrentImage);
-    clearBtn.addEventListener('click', clearAll);
-    copyBtn.addEventListener('click', copyText);
-
-    dropzone.addEventListener('click', () => dropzone.focus());
-  </script>
-
   <div id="reader-temporary" style="display:none"></div>
+  <script>
+    const $ = id => document.getElementById(id);
+    const statusEl=$('status'), resultEl=$('result'), previewEl=$('preview'), placeholderEl=$('placeholder'), metaEl=$('meta'), fileInput=$('fileInput'), dropzone=$('dropzone'), secretInput=$('secret'), codeEl=$('code'), timerEl=$('timer'), errorEl=$('error');
+    let currentFile=null, lastText='', imageUrl='', activeOtp=null, lastStep=-1;
+    const setStatus=(text,type='')=>{ statusEl.textContent=text; statusEl.className=`status ${type}`.trim(); };
+    async function copyToClipboard(text) { try { await navigator.clipboard.writeText(text); return true; } catch { const area=document.createElement('textarea'); area.value=text; area.style.position='fixed'; area.style.opacity='0'; document.body.append(area); area.select(); const copied=document.execCommand('copy'); area.remove(); return copied; } }
+    function parseOtp(text) { try { const url=new URL(text.trim()); if (url.protocol!=='otpauth:' || !['totp','hotp'].includes(url.hostname.toLowerCase())) return null; const secret=(url.searchParams.get('secret')||'').replace(/[\s-]/g,'').toUpperCase(); if (!secret) return null; return { secret, digits:Number(url.searchParams.get('digits'))||6, period:Number(url.searchParams.get('period'))||30, algorithm:(url.searchParams.get('algorithm')||'SHA1').toUpperCase() }; } catch { const match=text.match(/(?:^|[?&\s])secret=([A-Z2-7\s-]+)/i); return match ? {secret:match[1].replace(/[\s-]/g,'').toUpperCase(),digits:6,period:30,algorithm:'SHA1'} : null; } }
+    function showImage(file) { if (!file?.type.startsWith('image/')) { setStatus('Нужен файл изображения','err'); return; } currentFile=file; if(imageUrl) URL.revokeObjectURL(imageUrl); imageUrl=URL.createObjectURL(file); previewEl.src=imageUrl; previewEl.style.display='block'; placeholderEl.style.display='none'; metaEl.textContent=`${file.name||'clipboard-image'} • ${Math.round(file.size/1024)} KB • ${file.type}`; setStatus('Изображение готово к распознаванию'); decodeCurrentImage(); }
+    async function applyOtpFromQr(text) { const config=parseOtp(text); if (!config) return false; secretInput.value=config.secret; activeOtp=config; lastStep=-1; refreshOtp(); const copied=await copyToClipboard(config.secret); setStatus(copied ? 'QR считан: ключ 2FA вставлен и скопирован' : 'QR считан: ключ 2FA вставлен', 'ok'); return true; }
+    async function decodeCurrentImage() { if (!currentFile) { setStatus('Сначала вставьте или загрузите скриншот','err'); return; } try { setStatus('Распознаю QR-код…'); const reader=new Html5Qrcode('reader-temporary'); const decoded=await reader.scanFile(currentFile,true); lastText=decoded; resultEl.textContent=decoded; if (!await applyOtpFromQr(decoded)) setStatus('QR-код успешно считан','ok'); } catch { resultEl.textContent='QR-код не найден или изображение слишком низкого качества.'; setStatus('Не удалось распознать QR-код','err'); } }
+    function clearAll() { currentFile=null; lastText=''; if(imageUrl) URL.revokeObjectURL(imageUrl); imageUrl=''; previewEl.removeAttribute('src'); previewEl.style.display='none'; placeholderEl.style.display='block'; metaEl.textContent='Нет загруженного изображения.'; resultEl.textContent='Пока ничего не считано.'; fileInput.value=''; secretInput.value=''; activeOtp=null; codeEl.textContent='000000'; errorEl.textContent=''; setStatus('Очищено. Жду новый скриншот'); }
+    function base32ToBytes(value) { const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; const cleaned=value.replace(/[\s=-]/g,'').toUpperCase(); if(!cleaned || /[^A-Z2-7]/.test(cleaned)) throw new Error('invalid'); let bits=0, buffer=0, bytes=[]; for(const char of cleaned){ buffer=(buffer<<5)|alphabet.indexOf(char); bits+=5; if(bits>=8){ bytes.push((buffer>>>(bits-8))&255); bits-=8; } } return new Uint8Array(bytes); }
+    async function generateOtp(config) { const algoMap={SHA1:'SHA-1',SHA256:'SHA-256',SHA512:'SHA-512'}; const algorithm=algoMap[config.algorithm]; if(!algorithm || ![6,7,8].includes(config.digits)) throw new Error('unsupported'); const counter=Math.floor(Date.now()/1000/config.period); const data=new ArrayBuffer(8), view=new DataView(data); view.setUint32(4,counter,false); const key=await crypto.subtle.importKey('raw',base32ToBytes(config.secret),{name:'HMAC',hash:algorithm},false,['sign']); const hash=new Uint8Array(await crypto.subtle.sign('HMAC',key,data)); const offset=hash[hash.length-1]&15; const binary=((hash[offset]&127)<<24)|(hash[offset+1]<<16)|(hash[offset+2]<<8)|hash[offset+3]; return String(binary%(10**config.digits)).padStart(config.digits,'0'); }
+    async function refreshOtp() { if(!activeOtp) { timerEl.textContent='Осталось: 30 сек'; return; } const secondsLeft=activeOtp.period-(Math.floor(Date.now()/1000)%activeOtp.period); timerEl.textContent=`Осталось: ${secondsLeft} сек`; const step=Math.floor(Date.now()/1000/activeOtp.period); if(step===lastStep) return; lastStep=step; try { codeEl.textContent=await generateOtp(activeOtp); errorEl.textContent=''; } catch { activeOtp=null; codeEl.textContent='000000'; errorEl.textContent='Неверный или неподдерживаемый secret key.'; } }
+    $('decodeBtn').addEventListener('click',decodeCurrentImage); $('clearBtn').addEventListener('click',clearAll); $('copyBtn').addEventListener('click',async()=>{ if(!lastText) return setStatus('Сначала нужно распознать QR-код','err'); const copied=await copyToClipboard(lastText); setStatus(copied?'Текст скопирован в буфер обмена':'Не удалось скопировать текст',copied?'ok':'err'); });
+    $('generate').addEventListener('click',()=>{ const raw=secretInput.value.trim(); const config=parseOtp(raw)||parseOtp(`otpauth://totp/?secret=${encodeURIComponent(raw)}`); if(!config) { errorEl.textContent='Введите корректный Base32 secret key.'; return; } secretInput.value=config.secret; activeOtp=config; lastStep=-1; refreshOtp(); }); $('copyCode').addEventListener('click',async()=>{ if(/^\d{6,8}$/.test(codeEl.textContent)) { const copied=await copyToClipboard(codeEl.textContent); $('copyCode').textContent=copied?'Скопировано':'Не удалось скопировать'; setTimeout(()=>$('copyCode').textContent='Скопировать код',1200); } }); secretInput.addEventListener('keydown',e=>{if(e.key==='Enter') $('generate').click();}); secretInput.addEventListener('input',()=>{if(!secretInput.value.trim()){activeOtp=null;codeEl.textContent='000000';errorEl.textContent='';}});
+    function handlePaste(event) { for(const item of event.clipboardData?.items||[]) if(item.type.startsWith('image/')) { event.preventDefault(); showImage(item.getAsFile()); return; } } dropzone.addEventListener('paste',handlePaste); window.addEventListener('paste',handlePaste); fileInput.addEventListener('change',e=>showImage(e.target.files?.[0])); dropzone.addEventListener('dragover',e=>{e.preventDefault();dropzone.classList.add('active')}); dropzone.addEventListener('dragleave',()=>dropzone.classList.remove('active')); dropzone.addEventListener('drop',e=>{e.preventDefault();dropzone.classList.remove('active');showImage(e.dataTransfer?.files?.[0])}); dropzone.addEventListener('click',()=>dropzone.focus()); setInterval(refreshOtp,250);
+  </script>
 </body>
 </html>
